@@ -17,52 +17,62 @@
 # limitations under the License.
 #
 
-include_recipe "openerp::common"
+# include_recipe "openerp::common"
 
-# Packages needed for the core OpenERP Server
-%w{ python-lxml python-mako python-egenix-mxdatetime python-dateutil
-    python-psycopg2 python-pychart python-pydot python-tz python-reportlab python-yaml
-    python-vobject }.each do |pkg|
-  package pkg do
-    action :install
-  end
+apt_repository 'openerp' do
+  uri          'http://nightly.openerp.com/7.0/nightly/deb'
+  only_if { platform_family?('debian') }
 end
 
-remote_file "openerp-server" do
-  path "#{Chef::Config['file_cache_path']}/openerp-server-#{node[:openerp][:version]}.tar.gz"
-  source "http://www.openerp.com/download/stable/source/openerp-server-#{node[:openerp][:version]}.tar.gz"
-  mode "0644"
+yum_repository 'openerp' do
+  uri          'http://nightly.openerp.com/7.0/nightly/rpm'
+  only_if { platform_family?('rhel') }
 end
 
-bash "untar-openerp-server" do
-  code <<-EOH
-  tar zxvf #{Chef::Config['file_cache_path']}/openerp-server-#{node[:openerp][:version]}.tar.gz -C /opt/openerp
-  chown -R openerp: /opt/openerp/openerp-server-#{node[:openerp][:version]}
-  EOH
-  not_if do File.exist?("/opt/openerp/openerp-server-#{node[:openerp][:version]}") &&
-    File.directory?("/opt/openerp/openerp-server-#{node[:openerp][:version]}")
-  end
-end
-
-link "/opt/openerp/server" do
-  to "openerp-server-#{node[:openerp][:version]}"
-end
-
-template "/etc/openerp-server.conf" do
-  source "openerp-server.conf.erb"
-  owner "#{node[:openerp][:user]}"
-  group "root"
-  mode "0640"
-  notifies :restart, "service[openerp-server]", :delayed
-end
-
-template "/etc/init.d/openerp-server" do
-  source "openerp-server.sh.erb"
-  mode "0755"
-  notifies :restart, "service[openerp-server]", :delayed
-end
-
-service "openerp-server" do
-  action :enable
-  supports :start => true, :stop => true, :restart => true
-end
+# # Packages needed for the core OpenERP Server
+# %w{ python-lxml python-mako python-egenix-mxdatetime python-dateutil
+#     python-psycopg2 python-pychart python-pydot python-tz python-reportlab python-yaml
+#     python-vobject }.each do |pkg|
+#   package pkg do
+#     action :install
+#   end
+# end
+#
+# remote_file "openerp-server" do
+#   path "#{Chef::Config['file_cache_path']}/openerp-server-#{node[:openerp][:version]}.tar.gz"
+#   source "http://www.openerp.com/download/stable/source/openerp-server-#{node[:openerp][:version]}.tar.gz"
+#   mode "0644"
+# end
+#
+# bash "untar-openerp-server" do
+#   code <<-EOH
+#   tar zxvf #{Chef::Config['file_cache_path']}/openerp-server-#{node[:openerp][:version]}.tar.gz -C /opt/openerp
+#   chown -R openerp: /opt/openerp/openerp-server-#{node[:openerp][:version]}
+#   EOH
+#   not_if do File.exist?("/opt/openerp/openerp-server-#{node[:openerp][:version]}") &&
+#     File.directory?("/opt/openerp/openerp-server-#{node[:openerp][:version]}")
+#   end
+# end
+#
+# link "/opt/openerp/server" do
+#   to "openerp-server-#{node[:openerp][:version]}"
+# end
+#
+# template "/etc/openerp-server.conf" do
+#   source "openerp-server.conf.erb"
+#   owner "#{node[:openerp][:user]}"
+#   group "root"
+#   mode "0640"
+#   notifies :restart, "service[openerp-server]", :delayed
+# end
+#
+# template "/etc/init.d/openerp-server" do
+#   source "openerp-server.sh.erb"
+#   mode "0755"
+#   notifies :restart, "service[openerp-server]", :delayed
+# end
+#
+# service "openerp-server" do
+#   action :enable
+#   supports :start => true, :stop => true, :restart => true
+# end

@@ -13,6 +13,6 @@ recipe            "openerp::webclient", "Installs the OpenERP web client"
   supports os
 end
 
-%w{postgresql openssl}.each do |cb|
+%w{apt yum postgresql openssl}.each do |cb|
   depends cb
 end
